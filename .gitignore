@@ -1,0 +1,42 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# Vercel
+.vercel
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# debug & logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# env files (secrets) — copy .env.example → .env locally; set vars in Vercel dashboard
+.env
+.env.*
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# testing / coverage
+coverage
+.nyc_output
+
+# caches
+.turbo
+.eslintcache
+# IDE (optional local settings)
+.idea/

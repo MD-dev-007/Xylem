@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String   @id @default(cuid()) @map("_id")
+  name        String
+  slug        String   @unique
+  categoryId  String
+  description String
+  photos      String[]
+  price       Float
+  discount    Float    @default(0)
+  colors      String[]
+  sizes       String[]
+  inStock     Boolean  @default(true)
+  featured    Boolean  @default(false)
+  relatedIds  String[]
+  createdAt   DateTime @default(now())
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  @@map("products")
+}
+
+model Category {
+  id       String    @id @default(cuid()) @map("_id")
+  name     String
+  slug     String    @unique
+  world    World
+  products Product[]
+
+  @@map("categories")
+}
+
+model Lead {
+  id        String   @id @default(cuid()) @map("_id")
+  name      String
+  phone     String
+  email     String?
+  message   String?
+  type      LeadType
+  productId String?
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+
+  @@map("leads")
+}
+
+model Project {
+  id          String  @id @default(cuid()) @map("_id")
+  title       String
+  slug        String  @unique
+  style       String
+  beforePhoto String
+  afterPhoto  String
+  description String
+  featured    Boolean @default(false)
+
+  @@map("projects")
+}
+
+enum World {
+  FURNITURE
+  INTERIOR
+}
+
+enum LeadType {
+  PRODUCT_ENQUIRY
+  CONSULTATION
+}
