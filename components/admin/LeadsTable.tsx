@@ -1,5 +1,11 @@
 "use client";
 
+type LeadProduct = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 type LeadRow = {
   id: string;
   name: string;
@@ -7,6 +13,7 @@ type LeadRow = {
   type: string;
   status: string;
   createdAt: string;
+  product?: LeadProduct | null;
 };
 
 type LeadsTableProps = {
@@ -21,6 +28,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
           <tr>
             <th className="px-4 py-3">Name</th>
             <th className="px-4 py-3">Phone</th>
+            <th className="px-4 py-3">Product</th>
             <th className="px-4 py-3">Type</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Date</th>
@@ -31,6 +39,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
             <tr key={lead.id} className="border-t border-black/10">
               <td className="px-4 py-3">{lead.name}</td>
               <td className="px-4 py-3">{lead.phone}</td>
+              <td className="px-4 py-3">{lead.product?.name ?? "—"}</td>
               <td className="px-4 py-3">{lead.type}</td>
               <td className="px-4 py-3">{lead.status}</td>
               <td className="px-4 py-3">{new Date(lead.createdAt).toLocaleDateString()}</td>

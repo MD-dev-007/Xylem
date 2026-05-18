@@ -18,6 +18,11 @@ type Lead = {
   type: string;
   status: string;
   createdAt: string;
+  product?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
 };
 
 export default function AdminHomePage() {

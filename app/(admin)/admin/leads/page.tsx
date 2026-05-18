@@ -12,6 +12,11 @@ type Lead = {
   type: "PRODUCT_ENQUIRY" | "CONSULTATION";
   status: "NEW" | "CONTACTED" | "CLOSED";
   createdAt: string;
+  product?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
 };
 
 export default function AdminLeadsPage() {
@@ -89,6 +94,7 @@ export default function AdminLeadsPage() {
                 <p className="font-medium text-primary">{lead.name}</p>
                 <p className="text-xs text-primary/65">
                   {lead.phone} · {lead.type}
+                  {lead.product ? ` · ${lead.product.name}` : ""}
                 </p>
               </div>
               <span className="text-xs text-primary/70">{lead.status}</span>
@@ -96,7 +102,20 @@ export default function AdminLeadsPage() {
             {expanded === lead.id ? (
               <div className="border-t border-black/10 px-4 py-3 text-sm text-primary/80">
                 <p>Email: {lead.email ?? "-"}</p>
-                <p>Message: {lead.message ?? "-"}</p>
+                {lead.product ? (
+                  <p>
+                    Product:{" "}
+                    <a
+                      href={`/furniture/product/${lead.product.slug}`}
+                      className="font-medium text-accent underline-offset-2 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {lead.product.name}
+                    </a>
+                  </p>
+                ) : null}
+                <p className="whitespace-pre-wrap">Message: {lead.message ?? "-"}</p>
                 <p>Date: {new Date(lead.createdAt).toLocaleString()}</p>
                 <div className="mt-3">
                   <label className="mr-2 text-xs">Update Status:</label>

@@ -2,11 +2,10 @@
 
 import { ProductGallery } from "@/components/furniture/ProductGallery";
 import { ProductCard } from "@/components/furniture/ProductCard";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/toast";
+import { ProductEnquiryDialog } from "@/components/furniture/ProductEnquiryDialog";
 import { Heart, Star } from "lucide-react";
 import { useParams } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type DetailProduct = {
   id: string;
@@ -29,10 +28,12 @@ type DetailProduct = {
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
-  const { push } = useToast();
   const [product, setProduct] = useState<DetailProduct | null>(null);
   const [allProducts, setAllProducts] = useState<DetailProduct[]>([]);
   const [loadingProduct, setLoadingProduct] = useState(true);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [wishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -53,12 +54,6 @@ export default function ProductDetailPage() {
       .then(setAllProducts)
       .catch(() => setAllProducts([]));
   }, [slug]);
-
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   if (loadingProduct) {
     return <main className="px-6 py-16 text-primary">Loading product...</main>;
@@ -83,39 +78,6 @@ export default function ProductDetailPage() {
       setWishlisted(true);
     }
     localStorage.setItem(key, JSON.stringify(next));
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!selectedColor || !selectedSize) {
-      push({ title: "Select color and size", description: "Both fields are required before enquiry." });
-      return;
-    }
-
-    const formData = new FormData(event.currentTarget);
-    setSubmitting(true);
-    const response = await fetch("/api/leads", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: formData.get("name"),
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        message: formData.get("message"),
-        type: "PRODUCT_ENQUIRY",
-        productId: product.id
-      })
-    });
-    setSubmitting(false);
-
-    if (!response.ok) {
-      push({ title: "Failed to submit", description: "Please try again in a moment." });
-      return;
-    }
-
-    push({ title: "Enquiry sent", description: "Our team will contact you shortly." });
-    setIsDialogOpen(false);
-    event.currentTarget.reset();
   };
 
   return (
@@ -188,8 +150,20 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-3 pt-3">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
+            <ProductEnquiryDialog
+              product={{
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                colors: product.colors,
+                sizes: product.sizes,
+                inStock: product.inStock
+              }}
+              requireColorSize
+              showOptionPickers={false}
+              selectedColor={selectedColor}
+              selectedSize={selectedSize}
+              trigger={
                 <button
                   type="button"
                   className="rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-primary disabled:opacity-50"
@@ -197,25 +171,8 @@ export default function ProductDetailPage() {
                 >
                   Send Enquiry
                 </button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogTitle className="mb-4 text-xl font-semibold text-primary">Send Enquiry</DialogTitle>
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <input name="productId" defaultValue={product.id} type="hidden" />
-                  <input name="name" required placeholder="Name*" className="h-11 w-full rounded-md border px-3" />
-                  <input name="phone" required placeholder="Phone*" className="h-11 w-full rounded-md border px-3" />
-                  <input name="email" placeholder="Email" className="h-11 w-full rounded-md border px-3" />
-                  <textarea name="message" placeholder="Message" rows={4} className="w-full rounded-md border p-3" />
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full rounded-md bg-primary py-3 text-sm font-semibold text-white"
-                  >
-                    {submitting ? "Submitting..." : "Submit Enquiry"}
-                  </button>
-                </form>
-              </DialogContent>
-            </Dialog>
+              }
+            />
             <button
               type="button"
               onClick={handleWishlist}

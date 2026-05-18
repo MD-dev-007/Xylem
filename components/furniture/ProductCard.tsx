@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductEnquiryDialog } from "@/components/furniture/ProductEnquiryDialog";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import Image from "next/image";
@@ -96,12 +97,21 @@ export function ProductCard({ product }: ProductCardProps) {
             >
               View Details
             </Link>
-            <button
-              type="button"
-              className="rounded-md bg-accent px-4 py-2 text-xs font-semibold text-primary transition-opacity hover:opacity-90"
-            >
-              Enquire
-            </button>
+            <ProductEnquiryDialog
+              product={{
+                id: product.id,
+                name: product.name,
+                slug: product.slug
+              }}
+              trigger={
+                <button
+                  type="button"
+                  className="rounded-md bg-accent px-4 py-2 text-xs font-semibold text-primary transition-opacity hover:opacity-90"
+                >
+                  Enquire
+                </button>
+              }
+            />
           </div>
         </div>
       </div>

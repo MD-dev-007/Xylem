@@ -14,10 +14,31 @@ const leadSchema = z.object({
   productId: z.string().optional()
 });
 
+async function enrichLeadsWithProducts<T extends { productId: string | null }>(leads: T[]) {
+  const productIds = [...new Set(leads.map((lead) => lead.productId).filter(Boolean))] as string[];
+
+  if (productIds.length === 0) {
+    return leads.map((lead) => ({ ...lead, product: null }));
+  }
+
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: { id: true, name: true, slug: true, price: true, photos: true }
+  });
+
+  const productById = new Map(products.map((product) => [product.id, product]));
+
+  return leads.map((lead) => ({
+    ...lead,
+    product: lead.productId ? productById.get(lead.productId) ?? null : null
+  }));
+}
+
 export async function GET() {
   try {
     const leads = await prisma.lead.findMany({ orderBy: { createdAt: "desc" } });
-    return NextResponse.json(leads, { status: 200 });
+    const enriched = await enrichLeadsWithProducts(leads);
+    return NextResponse.json(enriched, { status: 200 });
   } catch {
     return NextResponse.json([], { status: 200 });
   }
@@ -42,16 +63,28 @@ export async function POST(request: Request) {
       }
     });
 
+    let productName: string | null = null;
+    if (lead.productId) {
+      const product = await prisma.product.findUnique({
+        where: { id: lead.productId },
+        select: { name: true }
+      });
+      productName = product?.name ?? null;
+    }
+
     if (resend) {
       await resend.emails.send({
         from: "XYLEM <onboarding@resend.dev>",
         to: ["admin@xylem.com"],
         subject: `New ${lead.type} lead from ${lead.name}`,
-        html: `<p>Phone: ${lead.phone}</p><p>Email: ${lead.email ?? "-"}</p><p>Message: ${lead.message ?? "-"}</p>`
+        html: `<p>Phone: ${lead.phone}</p><p>Email: ${lead.email ?? "-"}</p>${
+          productName ? `<p>Product: ${productName}</p>` : ""
+        }<p>Message: ${lead.message ?? "-"}</p>`
       });
     }
 
-    return NextResponse.json(lead, { status: 201 });
+    const [enriched] = await enrichLeadsWithProducts([lead]);
+    return NextResponse.json(enriched, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to create lead" }, { status: 500 });
   }
